@@ -2,16 +2,15 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { BigNumber } from 'ethers';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-// import { parseEther } from "ethers/lib/utils";
 import * as mocha from "mocha-steps";
-import { PROPTOKEN } from '../typechain-types';
+import { PropToken } from '../typechain-types';
 
 function toWei(amount: number, decimals: number): BigNumber {
 	return ethers.utils.parseUnits(amount.toString(), decimals);
 }
 
 describe("PROP TOKEN test", function () {
-    let token: PROPTOKEN;
+    let token: PropToken;
     let owner: SignerWithAddress;
     let newOwner: SignerWithAddress;
     let admin: SignerWithAddress;
@@ -31,7 +30,7 @@ describe("PROP TOKEN test", function () {
     const totalSupply = toWei(10_000_000_000, decimals);
 
     mocha.step("Deploy", async function () {
-      const tokenF = await ethers.getContractFactory('PROPTOKEN');
+      const tokenF = await ethers.getContractFactory('PropToken');
       token = await tokenF.connect(owner).deploy(totalSupply);
     });
 
@@ -181,11 +180,11 @@ describe("PROP TOKEN test", function () {
     });
 
     mocha.step("Check AccessControll for setNewOwner function", async function () {
-      await expect(token.connect(user1).setNewOwner(newOwner.address)).to.be.revertedWith(`AccessControl: account ${user1.address.toLowerCase()} is missing role ${(await token.ADMIN_ROLE()).toLowerCase()}`);
+      await expect(token.connect(user1).setNewOwner(newOwner.address)).to.be.revertedWith('This function can only be called by the current owner.');
     });
 
     mocha.step("Call setNewOwner function", async function () {
-      await token.connect(admin).setNewOwner(newOwner.address);
+      await token.connect(owner).setNewOwner(newOwner.address);
     });
 
     mocha.step("Check getOwner function after call setNewOwner function", async function () {

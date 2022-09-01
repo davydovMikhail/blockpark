@@ -5,13 +5,28 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract PROPTOKEN is ERC20, Pausable, AccessControl {
+contract PropToken is ERC20, Pausable, AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     address private _owner;
 
     mapping(address => bool) public whitelist;
     mapping(address => bool) public blocklist;
+
+    event WhitelistChanged(
+        address Address,
+        bool Status
+    );
+
+    event BlocklistChanged(
+        address Address,
+        bool Status
+    );
+
+    event OwnershipTransfered(
+        address OldOwner,
+        address NewOwner
+    );
 
     constructor(uint _initialSupply) ERC20("PROP TOKEN", "PROP") {
         _mint(msg.sender, _initialSupply);
@@ -30,10 +45,12 @@ contract PROPTOKEN is ERC20, Pausable, AccessControl {
 
     function changeWhitelist(address user, bool status) public onlyRole(ADMIN_ROLE) {
         whitelist[user] = status;
+        emit WhitelistChanged(user, status);
     }
 
     function changeBlocklist(address user, bool status) public onlyRole(ADMIN_ROLE) {
         blocklist[user] = status;
+        emit BlocklistChanged(user, status);
     }
 
     function _beforeTokenTransfer(
@@ -48,7 +65,9 @@ contract PROPTOKEN is ERC20, Pausable, AccessControl {
         super._beforeTokenTransfer(from, to, amount);
     }
 
-    function setNewOwner(address _newOwner) external onlyRole(ADMIN_ROLE) {
+    function setNewOwner(address _newOwner) external {
+        require(_owner == _msgSender(), "This function can only be called by the current owner.");
+        emit OwnershipTransfered(_owner, _newOwner);
         _owner = _newOwner;
     }
 
